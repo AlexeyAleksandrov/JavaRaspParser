@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="ru.cprocsp:JCP:2.0.39014" type="repository">
+    <properties maven-id="ru.cprocsp:JCP:2.0.39014" />
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/ru/cprocsp/JCP/2.0.39014/JCP-2.0.39014.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
