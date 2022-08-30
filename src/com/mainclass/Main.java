@@ -11,7 +11,7 @@ public class Main {
     public static void main(String[] args) throws Exception
     {
         // ищем все файлы в папке
-        String path = "C:\\Users\\ASUS\\IdeaProjects\\JavaExcel\\rasp_data\\";
+        String path = "C:\\Users\\ASUS\\Downloads\\rasp_1sep\\";
 
         String files;
         File folder = new File(path);
@@ -46,10 +46,10 @@ public class Main {
 
 //        getGroupRasp(groups, "ЭЛБО-01-18");
 //        getGroupRasp(groups, "ЭОСО-01-18");
-//        Vector<pair_subject> pairs_by_group = getGroupRasp(groups, "КСБО-01-19");
+//        Vector<pair_subject> pairs_by_group = getGroupRasp(groups, "ЭЛБО-01-18");
 //        printPairs(pairs_by_group);
 
-//        Vector<pair_subject> pairs_in_classroom = getPairsInClassroom(groups, "Б-217");
+//        Vector<pair_subject> pairs_in_classroom = getPairsInClassroom(groups, "А-424-3");
 //        printPairs(pairs_in_classroom);
 
         Vector<pair_subject> pairs_by_lecturer = getPairsByLecturer(groups, "Карпов");
@@ -76,7 +76,16 @@ public class Main {
 //            System.out.print("Тип пары: " + pair.subject_type + "\t");
 //            System.out.print("Преподаватель: " + pair.subject_lecturer + "\t");
 //            System.out.println("");
-            System.out.println(pair.subject_classroom + "\t" + pair.time.day_of_week + "\t" + pair.time.pair_number + "\t" + pair.time.week_type + "\t" + pair.subject_groupName + "\t" + pair.subject_name + "\t");
+            System.out.println(pair.subject_classroom +
+                    "\t" + pair.time.day_of_week +
+                    "\t" + pair.time.pair_number  +
+                    "\t" + pair.time.pair_start  +
+                    " - " + pair.time.pair_end  +
+                    "\t" + pair.time.week_type +
+                    "\t" + pair.subject_groupName +
+                    "\t" + pair.subject_name +
+                    "\t" + pair.subject_lecturer +
+                    "\t");
         }
     }
 
@@ -124,7 +133,7 @@ public class Main {
 
     public static Vector<pair_subject> getPairsByLecturer(Vector<univer_group> groups, String lecturer_name)
     {
-        Vector<pair_subject> pairs = new Vector<pair_subject>();
+        Vector<pair_subject> pairs = new Vector<>();
         for (univer_group group : groups)
         {
             for (pair_subject pair : group.getPairs())

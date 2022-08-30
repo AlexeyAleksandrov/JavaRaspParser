@@ -164,27 +164,29 @@ public class RaspParser
         for (int i=3; i<rows; i++)  // начинаем с 3, т.к. там первая неделя
         {
             String celltext = getCellText(sheet, i, 4); // идём по 4-й колонке (отвечает за чередование недель)
+//            System.out.println("Строка: " + i);
             if(celltext.isEmpty())  // Если дальше идти некуда
             {
+//                System.out.println("Неи информации о неделе");
                 break;
             }
             week_type = celltext;
-            String p_end = getCellText(sheet, i, 3);
+            String p_end = getCellText(sheet, i, 3);    // время окончания пары
             if(!p_end.isEmpty())
             {
                 pair_end = p_end;
             }
-            String p_start = getCellText(sheet, i, 2);
+            String p_start = getCellText(sheet, i, 2);  // время начала пары
             if(!p_start.isEmpty())
             {
                 pair_start = p_start;
             }
-            String p_num = getCellText(sheet, i, 1);
+            String p_num = getCellText(sheet, i, 1);    // номер пары
             if(!p_num.isEmpty())
             {
                 pair_number = p_num;
             }
-            String d_week = getCellText(sheet, i, 0);
+            String d_week = getCellText(sheet, i, 0);   // неделя, к которой привязана пара
             if(!d_week.isEmpty())
             {
                 if(!day_of_week.equals(d_week)) // если уже другой день, то меняем индекс
@@ -205,6 +207,8 @@ public class RaspParser
                 p_time.week_type = week_type;
 
                 pair_times.add(p_time);
+
+//                System.out.println("Данные о паре: " + p_time.toString());
             }
             catch (Exception error)
             {
@@ -221,7 +225,7 @@ public class RaspParser
         for (int col=0; col<columns_count; col++)
         {
             String celltext = getCellText(sheet, 2, col); // получаем текст в ячейке
-            if (celltext.contains("Предмет"))
+            if (celltext.contains("Предмет") || celltext.contains("Дисциплина"))
             {
                 columnsWithGroups.add(col); // добавляем колонку в список, как колонку с предметами
             }
