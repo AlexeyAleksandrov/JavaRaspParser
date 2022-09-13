@@ -2,16 +2,15 @@ package com.mainclass;
 
 
 import java.io.File;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Vector;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Main {
 
     public static void main(String[] args) throws Exception
     {
         // ищем все файлы в папке
-        String path = "C:\\Users\\ASUS\\Downloads\\rasp_1sep\\";
+        String path = "C:\\Users\\ASUS\\Downloads\\rasp_14sep\\";
 
         String files;
         File folder = new File(path);
@@ -19,7 +18,7 @@ public class Main {
 
         // создаём парсер
         RaspParser parser = new RaspParser();
-        Vector<univer_group> groups = new Vector<univer_group>();
+        List<univer_group> groups = new ArrayList<>();
 
         // проходим по всем файлам
         for (int i = 0; i < listOfFiles.length; i++)
@@ -46,18 +45,21 @@ public class Main {
 
 //        getGroupRasp(groups, "ЭЛБО-01-18");
 //        getGroupRasp(groups, "ЭОСО-01-18");
-//        Vector<pair_subject> pairs_by_group = getGroupRasp(groups, "ЭЛБО-01-18");
+//        List<pair_subject> pairs_by_group = getGroupRasp(groups, "ЭЛБО-01-18");
 //        printPairs(pairs_by_group);
 
-//        Vector<pair_subject> pairs_in_classroom = getPairsInClassroom(groups, "А-424-3");
+//        List<pair_subject> pairs_in_classroom = getPairsInClassroom(groups, "А-424");
 //        printPairs(pairs_in_classroom);
 
-        Vector<pair_subject> pairs_by_lecturer = getPairsByLecturer(groups, "Карпов");
-        printPairs(pairs_by_lecturer);
+//        List<pair_subject> pairs_by_lecturer = getPairsByLecturer(groups, "Карпов");
+//        printPairs(pairs_by_lecturer);
+
+        List<pair_subject> matchingPairs = getMatchersPairs(groups);
+        printPairs(matchingPairs);
 
     }
 
-    public static void printPairs(Vector<pair_subject> pairs)
+    public static void printPairs(List<pair_subject> pairs)
     {
         String last_day = "";
         for (pair_subject pair : pairs)
@@ -84,12 +86,13 @@ public class Main {
                     "\t" + pair.time.week_type +
                     "\t" + pair.subject_groupName +
                     "\t" + pair.subject_name +
+                    "\t" + pair.subject_type +
                     "\t" + pair.subject_lecturer +
                     "\t");
         }
     }
 
-    public static Vector<pair_subject> getGroupRasp(Vector<univer_group> groups, String group_name)
+    public static List<pair_subject> getGroupRasp(List<univer_group> groups, String group_name)
     {
         for (univer_group group : groups)
         {
@@ -114,9 +117,9 @@ public class Main {
         return null;
     }
 
-    public static Vector<pair_subject> getPairsInClassroom(Vector<univer_group> groups, String classroom_name)
+    public static List<pair_subject> getPairsInClassroom(List<univer_group> groups, String classroom_name)
     {
-        Vector<pair_subject> pairs = new Vector<pair_subject>();
+        List<pair_subject> pairs = new ArrayList<>();
         for (univer_group group : groups)
         {
             for (pair_subject pair : group.getPairs())
@@ -131,9 +134,9 @@ public class Main {
         return pairs;
     }
 
-    public static Vector<pair_subject> getPairsByLecturer(Vector<univer_group> groups, String lecturer_name)
+    public static List<pair_subject> getPairsByLecturer(List<univer_group> groups, String lecturer_name)
     {
-        Vector<pair_subject> pairs = new Vector<>();
+        List<pair_subject> pairs = new ArrayList<>();
         for (univer_group group : groups)
         {
             for (pair_subject pair : group.getPairs())
@@ -146,5 +149,75 @@ public class Main {
         }
         univer_group.sortPairs(pairs);  // сортируем пары
         return pairs;
+    }
+
+    public static List<pair_subject> getMatchersPairs(List<univer_group> groups)
+    {
+        // совпадающие
+        List<pair_subject> matchingPairs = new ArrayList<>();
+
+        for (int i = 0; i < groups.size(); i++)
+        {
+            List<pair_subject> pairs_1 = groups.get(i).getPairs();
+            for (int j = 0; j < i; j++)
+            {
+                List<pair_subject> pairs_2 = groups.get(j).getPairs();
+
+                for (int k = 0; k < pairs_1.size(); k++)
+                {
+                    pair_subject pair_1 = pairs_1.get(k);
+                    for (int l = 0; l < pairs_2.size(); l++)
+                    {
+                        pair_subject pair_2 = pairs_2.get(l);
+
+                        if(
+                                (pair_1.subject_classroom.equals(pair_2.subject_classroom)
+                                        && (!pair_1.subject_classroom.isEmpty())
+                                        && (!pair_1.subject_classroom.toLowerCase().contains("фок"))
+                                        && (!pair_1.subject_classroom.toLowerCase().contains("каф"))
+                                        && (!pair_1.subject_classroom.toLowerCase().contains("база"))
+                                        && (pair_1.time.week_type.equals(pair_2.time.week_type))
+                                        && (pair_1.time.day_of_week_number == pair_2.time.day_of_week_number)
+                                        && (pair_1.time.pair_number == pair_2.time.pair_number)
+                                        && (!pair_1.subject_name.equals(pair_2.subject_name))
+                                )
+                                        && (!pair_1.subject_type.toLowerCase().equals("л"))
+                                        && (!pair_1.subject_type.toLowerCase().equals("лк")))
+                        {
+                            matchingPairs.add(pair_1);
+                            matchingPairs.add(pair_2);
+                        }
+                    }
+                }
+            }
+        }
+
+        matchingPairs = matchingPairs.stream().distinct().collect(Collectors.toList());
+
+        matchingPairs.sort(new Comparator<pair_subject>() {
+            @Override
+            public int compare(pair_subject o1, pair_subject o2)
+            {
+//                return o1.subject_classroom.compareTo(o2.subject_classroom);
+                if(o1.time.day_of_week_number != o2.time.day_of_week_number)
+                {
+                    return Integer.compare(o1.time.day_of_week_number, o2.time.day_of_week_number);
+                }
+                else if(o1.time.pair_number != o2.time.pair_number)
+                {
+                    return Integer.compare(o1.time.pair_number, o2.time.pair_number);
+                }
+                else if(!o1.time.week_type.equals(o2.time.week_type))
+                {
+                    return o1.time.week_type.compareTo(o2.time.week_type);
+                }
+                else
+                {
+                    return o1.subject_classroom.compareTo(o2.subject_classroom);
+                }
+            }
+        });
+
+        return matchingPairs;
     }
 }

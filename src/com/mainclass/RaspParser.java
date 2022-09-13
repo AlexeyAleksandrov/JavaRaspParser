@@ -7,8 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Comparator;
-import java.util.Vector;
+import java.util.*;
 import java.util.Comparator;
 
 class pair_time
@@ -66,7 +65,7 @@ class pair_subject
 class univer_group
 {
     private String group_name = null;
-    private final Vector<pair_subject> pairs = new Vector<pair_subject>();
+    private final List<pair_subject> pairs = new ArrayList<>();
 
     public void setGroup_name(String group_name)
     {
@@ -78,7 +77,7 @@ class univer_group
         return group_name;
     }
 
-    public Vector<pair_subject> getPairs()
+    public List<pair_subject> getPairs()
     {
         return pairs;
     }
@@ -88,7 +87,7 @@ class univer_group
         pairs.add(pair);
     }
 
-    public static void sortPairs(Vector<pair_subject> pairs)
+    public static void sortPairs(List<pair_subject> pairs)
     {
         pairs.sort(new Comparator<pair_subject>()
         {
@@ -138,142 +137,172 @@ class univer_group
 
 public class RaspParser
 {
-    public Vector<univer_group> readRasp(String filename) throws IOException
+    public List<univer_group> readRasp(String filename) throws IOException
     {
         if(!new File(filename).exists())
         {
-            return new Vector<univer_group>();
+            return new ArrayList<>();
         }
         Workbook book = new XSSFWorkbook(new FileInputStream(filename));     // объект работы с Excel 92-2007 (*.xls)
-        Sheet sheet = book.getSheetAt(0);   // получаем страницу
+        int sheetsCount = book.getNumberOfSheets(); // получаем количество страниц
+
+        List<univer_group> groups = new ArrayList<>();
+
+        for (int sheetIndex = 0; sheetIndex < sheetsCount; sheetIndex++)
+        {
+            Sheet sheet = book.getSheetAt(sheetIndex);   // получаем страницу
+
+            if(sheet == null)
+            {
+                continue;
+            }
 
 //        int cellnum = -1;
 //        int row_index = 0;
-        int rows = sheet.getPhysicalNumberOfRows();     // получаем количество строк
+            int rows = sheet.getPhysicalNumberOfRows();     // получаем количество строк
+//            System.out.println("кол-во строк: " + rows);
+            if(rows < 2)
+            {
+                continue;
+            }
+            if(sheet.getRow(0) == null)
+            {
+                continue;
+            }
+            if(sheet.getRow(0).getPhysicalNumberOfCells() < 2)
+            {
+                continue;
+            }
 
-        // сначала определяем, в какой день сколько пар и какой паре (по номеру) какая строка соответствует
-        String day_of_week = "";
-        int day_of_week_number = 0;
-        String pair_number = "";
-        String week_type = "";
-        String pair_start = "";
-        String pair_end = "";
+            // сначала определяем, в какой день сколько пар и какой паре (по номеру) какая строка соответствует
+            String day_of_week = "";
+            int day_of_week_number = 0;
+            String pair_number = "";
+            String week_type = "";
+            String pair_start = "";
+            String pair_end = "";
 
-        Vector<pair_time> pair_times = new Vector<pair_time>();
+            List<pair_time> pair_times = new ArrayList<>();
 
-        for (int i=3; i<rows; i++)  // начинаем с 3, т.к. там первая неделя
-        {
-            String celltext = getCellText(sheet, i, 4); // идём по 4-й колонке (отвечает за чередование недель)
+            for (int i=3; i<rows; i++)  // начинаем с 3, т.к. там первая неделя
+            {
+                String celltext = getCellText(sheet, i, 4); // идём по 4-й колонке (отвечает за чередование недель)
 //            System.out.println("Строка: " + i);
-            if(celltext.isEmpty())  // Если дальше идти некуда
-            {
-//                System.out.println("Неи информации о неделе");
-                break;
-            }
-            week_type = celltext;
-            String p_end = getCellText(sheet, i, 3);    // время окончания пары
-            if(!p_end.isEmpty())
-            {
-                pair_end = p_end;
-            }
-            String p_start = getCellText(sheet, i, 2);  // время начала пары
-            if(!p_start.isEmpty())
-            {
-                pair_start = p_start;
-            }
-            String p_num = getCellText(sheet, i, 1);    // номер пары
-            if(!p_num.isEmpty())
-            {
-                pair_number = p_num;
-            }
-            String d_week = getCellText(sheet, i, 0);   // неделя, к которой привязана пара
-            if(!d_week.isEmpty())
-            {
-                if(!day_of_week.equals(d_week)) // если уже другой день, то меняем индекс
+                if(celltext.isEmpty())  // Если дальше идти некуда
                 {
-                    day_of_week_number++;
+//                System.out.println("Неи информации о неделе");
+                    break;
                 }
-                day_of_week = d_week;
-            }
+                week_type = celltext;
+                String p_end = getCellText(sheet, i, 3);    // время окончания пары
+                if(!p_end.isEmpty())
+                {
+                    pair_end = p_end;
+                }
+                String p_start = getCellText(sheet, i, 2);  // время начала пары
+                if(!p_start.isEmpty())
+                {
+                    pair_start = p_start;
+                }
+                String p_num = getCellText(sheet, i, 1);    // номер пары
+                if(!p_num.isEmpty())
+                {
+                    pair_number = p_num;
+                }
+                String d_week = getCellText(sheet, i, 0);   // неделя, к которой привязана пара
+                if(!d_week.isEmpty())
+                {
+                    if(!day_of_week.equals(d_week)) // если уже другой день, то меняем индекс
+                    {
+                        day_of_week_number++;
+                    }
+                    day_of_week = d_week;
+                }
 
-            try
-            {
-                pair_time p_time = new pair_time();
-                p_time.day_of_week = day_of_week;
-                p_time.day_of_week_number = day_of_week_number;
-                p_time.pair_number = (int)Double.parseDouble(pair_number);
-                p_time.pair_start = pair_start;
-                p_time.pair_end = pair_end;
-                p_time.week_type = week_type;
+                try
+                {
+                    pair_time p_time = new pair_time();
+                    p_time.day_of_week = day_of_week;
+                    p_time.day_of_week_number = day_of_week_number;
+                    p_time.pair_number = (int)Double.parseDouble(pair_number);
+                    p_time.pair_start = pair_start;
+                    p_time.pair_end = pair_end;
+                    p_time.week_type = week_type;
 
-                pair_times.add(p_time);
+                    pair_times.add(p_time);
 
 //                System.out.println("Данные о паре: " + p_time.toString());
-            }
-            catch (Exception error)
-            {
-                System.out.println(error.toString());
-            }
+                }
+                catch (Exception error)
+                {
+                    System.out.println(error.toString());
+                }
 
 
 //            System.out.println(p_time);
-        }
-
-        // получаем теперь колонки, содержащие предметы
-        Vector<Integer> columnsWithGroups = new Vector<Integer>();
-        int columns_count = sheet.getRow(2).getPhysicalNumberOfCells(); // получаем количество столбцов во 2й строке (там, где указано слово предмет)
-        for (int col=0; col<columns_count; col++)
-        {
-            String celltext = getCellText(sheet, 2, col); // получаем текст в ячейке
-            if (celltext.contains("Предмет") || celltext.contains("Дисциплина"))
-            {
-                columnsWithGroups.add(col); // добавляем колонку в список, как колонку с предметами
             }
-        }
 
-        Vector<univer_group> groups = new Vector<univer_group>();
-
-        for (int col : columnsWithGroups)
-        {
-            String group_name = getCellText(sheet, 1, col); // получаем название группы (всегда записано в 1 строке
-
-            univer_group group = new univer_group();
-            group.setGroup_name(group_name);
-
-            for (int row=3; row<pair_times.size()+3; row++) // проходим по всем строкам, содержащим предметы
+            // получаем теперь колонки, содержащие предметы
+            if(sheet.getPhysicalNumberOfRows() < 2)     // если количество строк меньше 2
             {
-//                String subject_name = getCellText(sheet, row, col).replace("\n", "\t");     // название предмета
-                String[] subject_names = getCellText(sheet, row, col).split("\n");
-                for (int i=0; i<subject_names.length; i++)
+                continue;
+            }
+            List<Integer> columnsWithGroups = new ArrayList<>();
+            int columns_count = sheet.getRow(2).getPhysicalNumberOfCells(); // получаем количество столбцов во 2й строке (там, где указано слово предмет)
+            for (int col=0; col<columns_count; col++)
+            {
+                String celltext = getCellText(sheet, 2, col); // получаем текст в ячейке
+                if (celltext.contains("Предмет") || celltext.contains("Дисциплина"))
                 {
-                    String subject_name = subject_names[i];
-                    if(!subject_name.isEmpty())
-                    {
-                        try
-                        {
-                            pair_subject pairSubject = new pair_subject();
-                            pairSubject.time = pair_times.get(row - 3);   // получаем время пары
-                            pairSubject.subject_name = subject_name;
-                            pairSubject.subject_type = getCellText(sheet, row, col + 1).split("\n")[i];   // тип занятий
-                            pairSubject.subject_lecturer = getCellText(sheet, row, col + 2).split("\n")[i];   // ФИО преподавателя
-                            pairSubject.subject_classroom = getCellText(sheet, row, col + 3).split("\n")[i];  // номер аудитории
-                            pairSubject.subject_groupName = group_name;
-
-                            group.addPair(pairSubject); // добавляем пару к группе
-                        }
-                        catch (Exception error)
-                        {
-//                            System.out.println("Exception: " + error.toString() + " при обработке " + subject_names[i]);
-                        }
-//                    System.out.println(group_name + " " + subject_name + " " + subject_type + " " + subject_lecturer + " " + subject_classroom);
-                    }
+                    columnsWithGroups.add(col); // добавляем колонку в список, как колонку с предметами
                 }
             }
 
-            group.sortPairs(group.getPairs());
+//            Vector<univer_group> groups = new Vector<univer_group>();
 
-            groups.add(group);  // добавляем группу в список
+            for (int col : columnsWithGroups)
+            {
+                String group_name = getCellText(sheet, 1, col); // получаем название группы (всегда записано в 1 строке
+
+                univer_group group = new univer_group();
+                group.setGroup_name(group_name);
+
+                for (int row=3; row<pair_times.size()+3; row++) // проходим по всем строкам, содержащим предметы
+                {
+//                String subject_name = getCellText(sheet, row, col).replace("\n", "\t");     // название предмета
+                    String[] subject_names = getCellText(sheet, row, col).split("\n");
+                    for (int i=0; i<subject_names.length; i++)
+                    {
+                        String subject_name = subject_names[i];
+                        if(!subject_name.isEmpty())
+                        {
+                            try
+                            {
+                                pair_subject pairSubject = new pair_subject();
+                                pairSubject.time = pair_times.get(row - 3);   // получаем время пары
+                                pairSubject.subject_name = subject_name;
+                                pairSubject.subject_type = getCellText(sheet, row, col + 1).split("\n")[i];   // тип занятий
+                                pairSubject.subject_lecturer = getCellText(sheet, row, col + 2).split("\n")[i];   // ФИО преподавателя
+                                pairSubject.subject_classroom = getCellText(sheet, row, col + 3).split("\n")[i];  // номер аудитории
+                                pairSubject.subject_groupName = group_name;
+
+                                group.addPair(pairSubject); // добавляем пару к группе
+                            }
+                            catch (Exception error)
+                            {
+//                            System.out.println("Exception: " + error.toString() + " при обработке " + subject_names[i]);
+                            }
+//                    System.out.println(group_name + " " + subject_name + " " + subject_type + " " + subject_lecturer + " " + subject_classroom);
+                        }
+                    }
+                }
+
+                group.sortPairs(group.getPairs());
+
+                groups.add(group);  // добавляем группу в список
+            }
         }
+
 
 //        // в конце выводим то, что получилось:
 //        for (univer_group group : groups)
@@ -289,7 +318,13 @@ public class RaspParser
 
     private String getCellText(Sheet sheet, int row, int cell)
     {
-        return getCellText(sheet.getRow(row).getCell(cell));
+        Row sheet_row = sheet.getRow(row);
+        if(sheet_row == null)
+        {
+//            System.out.println("row is null - " + row + " col - " + cell + " sheet " + sheet.getSheetName());
+            return "";
+        }
+        return getCellText(sheet_row.getCell(cell));
     }
 
     private String getCellText(Cell cell)
