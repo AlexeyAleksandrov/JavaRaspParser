@@ -10,7 +10,7 @@ public class Main {
     public static void main(String[] args) throws Exception
     {
         // ищем все файлы в папке
-        String path = "C:\\Users\\ASUS\\Downloads\\rasp_14sep\\";
+        String path = "C:\\Users\\ASUS\\Downloads\\rasp_15sep\\";
 
         String files;
         File folder = new File(path);
@@ -45,17 +45,17 @@ public class Main {
 
 //        getGroupRasp(groups, "ЭЛБО-01-18");
 //        getGroupRasp(groups, "ЭОСО-01-18");
-//        List<pair_subject> pairs_by_group = getGroupRasp(groups, "ЭЛБО-01-18");
+//        List<pair_subject> pairs_by_group = getGroupRasp(groups, "ЭФМО-01-22");
 //        printPairs(pairs_by_group);
 
 //        List<pair_subject> pairs_in_classroom = getPairsInClassroom(groups, "А-424");
 //        printPairs(pairs_in_classroom);
 
-//        List<pair_subject> pairs_by_lecturer = getPairsByLecturer(groups, "Карпов");
-//        printPairs(pairs_by_lecturer);
+        List<pair_subject> pairs_by_lecturer = getPairsByLecturer(groups, "Мильчакова Н.Е.");
+        printPairs(pairs_by_lecturer);
 
-        List<pair_subject> matchingPairs = getMatchersPairs(groups);
-        printPairs(matchingPairs);
+//        List<pair_subject> matchingPairs = getMatchersPairs(groups);
+//        printPairs(matchingPairs);
 
     }
 
@@ -96,7 +96,7 @@ public class Main {
     {
         for (univer_group group : groups)
         {
-            if(group.getGroup_name().equals(group_name))
+            if(group.getGroup_name().contains(group_name))
             {
                 return group.getPairs();
 //                for (pair_subject pair : group.getPairs())
@@ -114,7 +114,7 @@ public class Main {
 //                return group;
             }
         }
-        return null;
+        return new ArrayList<>();
     }
 
     public static List<pair_subject> getPairsInClassroom(List<univer_group> groups, String classroom_name)

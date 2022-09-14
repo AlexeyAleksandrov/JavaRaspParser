@@ -1,5 +1,6 @@
 package com.mainclass;
 
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.jetbrains.annotations.NotNull;
@@ -143,7 +144,22 @@ public class RaspParser
         {
             return new ArrayList<>();
         }
-        Workbook book = new XSSFWorkbook(new FileInputStream(filename));     // объект работы с Excel 92-2007 (*.xls)
+        Workbook book = null;
+        if(filename.endsWith(".xlsx"))
+        {
+            book = new XSSFWorkbook(new FileInputStream(filename));     // объект работы с Excel 2010 (*.xlsx)
+        }
+        else if(filename.endsWith(".xls"))
+        {
+            book = new HSSFWorkbook(new FileInputStream(filename));     // объект работы с Excel 92-2007 (*.xls)
+        }
+
+        if(book == null)    // если пустой
+        {
+            return new ArrayList<>();
+        }
+
+//        Workbook book = new XSSFWorkbook(new FileInputStream(filename));     // объект работы с Excel 92-2007 (*.xls)
         int sheetsCount = book.getNumberOfSheets(); // получаем количество страниц
 
         List<univer_group> groups = new ArrayList<>();
