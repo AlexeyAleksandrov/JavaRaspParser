@@ -1,6 +1,10 @@
 package com.mainclass;
 
 
+import com.mainclass.raspparser.RaspParser;
+import com.mainclass.raspparser.subjects.pair_subject;
+import com.mainclass.raspparser.subjects.univer_group;
+
 import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -10,7 +14,11 @@ public class Main {
     public static void main(String[] args) throws Exception
     {
         // ищем все файлы в папке
-        String path = "C:\\Users\\ASUS\\Downloads\\rasp_15sep\\";
+        String path = "C:\\Users\\ASUS\\Downloads\\rasp_20sep\\";
+        String outputFile = "";
+
+//        ExcelEditor excelEditor = new ExcelEditor();
+//        excelEditor.createSimpleXlsXExcelBook();
 
         String files;
         File folder = new File(path);
@@ -19,6 +27,8 @@ public class Main {
         // создаём парсер
         RaspParser parser = new RaspParser();
         List<univer_group> groups = new ArrayList<>();
+
+        parser.writePairsToFile(null);
 
         // проходим по всем файлам
         for (int i = 0; i < listOfFiles.length; i++)
@@ -45,14 +55,14 @@ public class Main {
 
 //        getGroupRasp(groups, "ЭЛБО-01-18");
 //        getGroupRasp(groups, "ЭОСО-01-18");
-//        List<pair_subject> pairs_by_group = getGroupRasp(groups, "ЭФМО-01-22");
-//        printPairs(pairs_by_group);
+        List<pair_subject> pairs_by_group = getGroupRasp(groups, "ЭФМО-01-22");
+        printPairs(pairs_by_group);
 
-//        List<pair_subject> pairs_in_classroom = getPairsInClassroom(groups, "А-424");
+//        List<pair_subject> pairs_in_classroom = getPairsInClassroom(groups, "В-404");
 //        printPairs(pairs_in_classroom);
 
-        List<pair_subject> pairs_by_lecturer = getPairsByLecturer(groups, "Мильчакова Н.Е.");
-        printPairs(pairs_by_lecturer);
+//        List<pair_subject> pairs_by_lecturer = getPairsByLecturer(groups, "Мильчакова Н.Е.");
+//        printPairs(pairs_by_lecturer);
 
 //        List<pair_subject> matchingPairs = getMatchersPairs(groups);
 //        printPairs(matchingPairs);

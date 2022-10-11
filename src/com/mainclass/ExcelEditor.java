@@ -19,7 +19,6 @@ public class ExcelEditor
         Sheet sheet = book.createSheet("My_list_28");   // создаём лист
 
 
-
         FileOutputStream ExcelOutStream = new FileOutputStream("testexcel.xls");    // создаём поток для записи файла
         book.write( ExcelOutStream );   // записываем Excel
 
