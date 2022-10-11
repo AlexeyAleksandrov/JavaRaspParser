@@ -271,6 +271,12 @@ public class RaspParser {
             }
         }
 
+        // заполняем данными из массива данных
+        if(pairs != null)
+        {
+
+        }
+
 //        // запись ячеек
 //        Row row = sheet.createRow(2);   // создаём строку в книге
 //        Cell cell = row.createCell(4);  // создаём ячейку в строке

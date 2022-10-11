@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-public class univer_group {
+public class univer_group implements Comparator<univer_group> {
     private String group_name = null;
     private final List<pair_subject> pairs = new ArrayList<>();
 
@@ -58,4 +58,10 @@ public class univer_group {
                 ", pairs=" + pairs +
                 '}';
     }
+
+    @Override
+    public int compare(univer_group o1, univer_group o2) {
+        return o1.getGroup_name().compareTo(o2.getGroup_name());
+    }
+
 }

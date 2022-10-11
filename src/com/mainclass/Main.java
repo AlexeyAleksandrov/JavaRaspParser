@@ -49,7 +49,8 @@ public class Main {
             @Override
             public int compare(final univer_group group1, final univer_group group2)
             {
-                return group1.getGroup_name().compareTo(group2.getGroup_name());
+//                return group1.getGroup_name().compareTo(group2.getGroup_name());
+                return group1.compare(group1, group2);
             }
         });
 
