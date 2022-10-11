@@ -4,8 +4,12 @@ package com.mainclass;
 import com.mainclass.raspparser.RaspParser;
 import com.mainclass.raspparser.subjects.pair_subject;
 import com.mainclass.raspparser.subjects.univer_group;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -14,52 +18,53 @@ public class Main {
     public static void main(String[] args) throws Exception
     {
         // ищем все файлы в папке
-        String path = "C:\\Users\\ASUS\\Downloads\\rasp_20sep\\";
-        String outputFile = "";
+        String path = "C:\\Users\\ASUS\\Downloads\\rasp_11oct\\";
+        String outputFileName = "Workbook_X.xlsx";
 
 //        ExcelEditor excelEditor = new ExcelEditor();
 //        excelEditor.createSimpleXlsXExcelBook();
 
-        String files;
-        File folder = new File(path);
-        File[] listOfFiles = folder.listFiles();
+//        String files;
+//        File folder = new File(path);
+//        File[] listOfFiles = folder.listFiles();
+//
+//        // создаём парсер
+//        RaspParser parser = new RaspParser();
+//        List<univer_group> groups = new ArrayList<>();
+//
+//        // проходим по всем файлам
+//        for (int i = 0; i < listOfFiles.length; i++)
+//        {
+//            if (listOfFiles[i].isFile())
+//            {
+//                files = listOfFiles[i].getName();
+//                System.out.println("Файл " + Integer.toString(i+1) + "/" + Integer.toString(listOfFiles.length) + ": " + files);
+//                if((!files.startsWith("~$")) && files.endsWith(".xlsx"))  // если это файл, который нам нужен
+//                {
+//                    groups.addAll(parser.readRasp(path + files));  // читаем и парсим его
+//                }
+//            }
+//        }
+//
+//        groups.sort(new Comparator<univer_group>()
+//        {
+//            @Override
+//            public int compare(final univer_group group1, final univer_group group2)
+//            {
+////                return group1.getGroup_name().compareTo(group2.getGroup_name());
+//                return group1.compare(group1, group2);
+//            }
+//        });
 
-        // создаём парсер
         RaspParser parser = new RaspParser();
-        List<univer_group> groups = new ArrayList<>();
-
-        parser.writePairsToFile(null);
-
-        // проходим по всем файлам
-        for (int i = 0; i < listOfFiles.length; i++)
-        {
-            if (listOfFiles[i].isFile())
-            {
-                files = listOfFiles[i].getName();
-                System.out.println("Файл " + Integer.toString(i+1) + "/" + Integer.toString(listOfFiles.length) + ": " + files);
-                if((!files.startsWith("~$")) && files.endsWith(".xlsx"))  // если это файл, который нам нужен
-                {
-                    groups.addAll(parser.readRasp(path + files));  // читаем и парсим его
-                }
-            }
-        }
-
-        groups.sort(new Comparator<univer_group>()
-        {
-            @Override
-            public int compare(final univer_group group1, final univer_group group2)
-            {
-//                return group1.getGroup_name().compareTo(group2.getGroup_name());
-                return group1.compare(group1, group2);
-            }
-        });
+        List<univer_group> groups = parser.parceFiles(path);
 
 //        getGroupRasp(groups, "ЭЛБО-01-18");
 //        getGroupRasp(groups, "ЭОСО-01-18");
-        List<pair_subject> pairs_by_group = getGroupRasp(groups, "ЭФМО-01-22");
-        printPairs(pairs_by_group);
+//        List<pair_subject> pairs_by_group = getGroupRasp(groups, "ЭФМО-01-22");
+//        printPairs(pairs_by_group);
 
-//        List<pair_subject> pairs_in_classroom = getPairsInClassroom(groups, "В-404");
+//        List<pair_subject> pairs_in_classroom = getPairsInClassroom(groups, "В-317");
 //        printPairs(pairs_in_classroom);
 
 //        List<pair_subject> pairs_by_lecturer = getPairsByLecturer(groups, "Мильчакова Н.Е.");
@@ -67,6 +72,20 @@ public class Main {
 
 //        List<pair_subject> matchingPairs = getMatchersPairs(groups);
 //        printPairs(matchingPairs);
+
+//        parser.writePairsToFile(pairs_in_classroom, "A-424-1", 0, outputFileName);
+
+        String[] classrooms = {"А-424-1", "А-424-2", "А-424-3", "Б-217", "Б-216-а"};
+        Workbook book = new XSSFWorkbook();     // объект работы с *.xlsx форматом
+        Sheet sheet = book.createSheet("Расписание");   // создаём лист
+
+        for (int i = 0; i < classrooms.length; i++)
+        {
+            List<pair_subject> pairs = getPairsInClassroom(groups, classrooms[i]);
+            parser.writePairsToFile(sheet, pairs, classrooms[i], i * 5);    // 5 столбцов для 1 аудитории
+
+        }
+        book.write(new FileOutputStream(outputFileName));  // сохраняем файл
 
     }
 
