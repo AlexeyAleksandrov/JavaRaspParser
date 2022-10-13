@@ -12,6 +12,43 @@ import java.util.*;
 
 
 public class RaspParser {
+    public List<univer_group> parceFiles(String path) throws IOException
+    {
+        String files;
+        File folder = new File(path);
+        File[] listOfFiles = folder.listFiles();
+
+        // создаём парсер
+//        RaspParser parser = new RaspParser();
+        List<univer_group> groups = new ArrayList<>();
+
+        // проходим по всем файлам
+        for (int i = 0; i < listOfFiles.length; i++)
+        {
+            if (listOfFiles[i].isFile())
+            {
+                files = listOfFiles[i].getName();
+                System.out.println("Файл " + Integer.toString(i+1) + "/" + Integer.toString(listOfFiles.length) + ": " + files);
+                if((!files.startsWith("~$")) && files.endsWith(".xlsx"))  // если это файл, который нам нужен
+                {
+                    groups.addAll(this.readRasp(path + files));  // читаем и парсим его
+                }
+            }
+        }
+
+        groups.sort(new Comparator<univer_group>()
+        {
+            @Override
+            public int compare(final univer_group group1, final univer_group group2)
+            {
+//                return group1.getGroup_name().compareTo(group2.getGroup_name());
+                return group1.compare(group1, group2);
+            }
+        });
+
+        return groups;
+    }
+
     public List<univer_group> readRasp(String filename) throws IOException {
         if (!new File(filename).exists()) {
             return new ArrayList<>();
@@ -88,7 +125,7 @@ public class RaspParser {
                 }
                 String d_week = getCellText(sheet, i, 0);   // неделя, к которой привязана пара
                 if (!d_week.isEmpty()) {
-                    if (!day_of_week.equals(d_week)) // если уже другой день, то меняем индекс
+                    if (!day_of_week.equals(d_week)) // если уже другой день, то меняем индекс. Если ячейка пустая, значит день недели остаётся тот же самый
                     {
                         day_of_week_number++;
                     }
@@ -221,68 +258,89 @@ public class RaspParser {
      * Генерирует Excel файл на основе списка пар
      *
      * @param pairs список пар, которые будут записаны в *.xlsx файл
+     * @param headerText заголовок, который будет выведен над таблицей
+     * @param startCellIndex номер столбца, с которого начинается заполнение. Нумерация начинается с 0
      */
-    public void writePairsToFile(List<pair_subject> pairs) throws IOException
+    public void writePairsToFile(Sheet sheet, List<pair_subject> pairs, String headerText, int startCellIndex) throws IOException
     {
-        Workbook book = new XSSFWorkbook();     // объект работы с *.xlsx форматом
-
-        // создание листов
-        Sheet sheet = book.createSheet("Расписание");   // создаём лист
-
         // генерируем внешний вид
         // генерируем ячейки
 
         String[] header = {"День", "№", "Н", "Время", "Предмет"};
         String[] daysNames = {"Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"};
-        int pairsInDayCount = 7;
+        int pairsInDayCount = 7;    // кол-во пар в день
+        int headerRows = 2; // кол-во строк, выделенное под заголовок
 
-        int rows = 1 + pairsInDayCount * 2 * daysNames.length;   // заголовок + 7 пар * 2 недели * 6 дней
+        int rows = headerRows + pairsInDayCount * 2 * daysNames.length;   // заголовок + 7 пар * 2 недели * 6 дней
         int cells = header.length;  // день недели, номер пары, номер недели, время, предмет
 
         for (int i = 0; i < rows; i++)
         {
-            Row row = sheet.createRow(i);   // создаём строку в книге
+            Row row = sheet.getRow(i);
+            if(row == null)
+            {
+                row = sheet.createRow(i);   // создаём строку в книге
+            }
             for (int j = 0; j < cells; j++)
             {
-                row.createCell(j);
+                row.createCell(startCellIndex + j);
             }
         }
 
         // заполняем статичные данные
         // заполняем заголовок
+        sheet.getRow(0).getCell(startCellIndex + 3).setCellValue(headerText);    // записываем название заголовка
         for (int j = 0; j < header.length; j++)
         {
-            sheet.getRow(0).getCell(j).setCellValue(header[j]);
+            sheet.getRow(headerRows-1).getCell(startCellIndex + j).setCellValue(header[j]);
         }
 
         // заполняем дни недели
         for (int i = 0; i < daysNames.length; i++)
         {
-            int rowIndex = i * pairsInDayCount*2 + 1;  // строка, в которую будет записан день недели
-            sheet.getRow(rowIndex).getCell(0).setCellValue(daysNames[i]);    // записываем название дня недели
+            int rowIndex = i * pairsInDayCount*2 + headerRows;  // строка, в которую будет записан день недели
+            sheet.getRow(rowIndex).getCell(startCellIndex).setCellValue(daysNames[i]);    // записываем название дня недели
             for (int j = 0; j < pairsInDayCount; j++)
             {
                 int pairRowIndex =  rowIndex + j*2;
-                sheet.getRow(pairRowIndex).getCell(1).setCellValue(j+1);  // записываем номер пары для нечётной недели
-                sheet.getRow(pairRowIndex+1).getCell(1).setCellValue(j+1);  // записываем номер пары для чётной недели
+                sheet.getRow(pairRowIndex).getCell(startCellIndex + 1).setCellValue(j+1);  // записываем номер пары для нечётной недели
+                sheet.getRow(pairRowIndex+1).getCell(startCellIndex + 1).setCellValue(j+1);  // записываем номер пары для чётной недели
 
-                sheet.getRow(pairRowIndex).getCell(2).setCellValue("I");  // записываем тип недели для нечётной недели
-                sheet.getRow(pairRowIndex+1).getCell(2).setCellValue("II");  // записываем тип недели для чётной недели
+                sheet.getRow(pairRowIndex).getCell(startCellIndex + 2).setCellValue("I");  // записываем тип недели для нечётной недели
+                sheet.getRow(pairRowIndex+1).getCell(startCellIndex + 2).setCellValue("II");  // записываем тип недели для чётной недели
             }
         }
 
         // заполняем данными из массива данных
         if(pairs != null)
         {
+            for (pair_subject pair : pairs)     // перебор всех пар
+            {
+                // (pair.time.week_type.equals("II") ? 0 : 1)
+                int pair_row = (pair.time.day_of_week_number-1) * pairsInDayCount*2 + (pair.time.pair_number - 1) * 2 + (pair.time.week_type.equals("II") ? 0 : 1) + headerRows;     // номер строки, в которую будет записана пара
 
+                String pair_time = pair.time.pair_start + " - " + pair.time.pair_end;   // формат записи времени пары
+                String subject = pair.subject_name + " " + pair.subject_type + " " + pair.subject_lecturer;     // формат записи данных о занятии
+
+                sheet.getRow(pair_row).getCell(startCellIndex + 3).setCellValue(pair_time);  // записываем время
+                sheet.getRow(pair_row).getCell(startCellIndex + 4).setCellValue(subject);    // записываем предмет
+            }
         }
+    }
 
-//        // запись ячеек
-//        Row row = sheet.createRow(2);   // создаём строку в книге
-//        Cell cell = row.createCell(4);  // создаём ячейку в строке
-//        cell.setCellValue("Текст в ячейку 2:4");    // записываем текст в ячейку
-
-        // сохранение файла
-        book.write(new FileOutputStream("Workbook_X.xlsx"));  // сохряняем файл
+    /**
+     * Генерирует Excel файл на основе списка пар
+     *
+     * @param pairs список пар, которые будут записаны в *.xlsx файл
+     * @param headerText заголовок, который будет выведен над таблицей
+     * @param startCellIndex номер столбца, с которого начинается заполнение. Нумерация начинается с 0
+     * @param outputFileName название файла на выходе
+     */
+    public void writePairsToFile(List<pair_subject> pairs, String headerText, int startCellIndex, String outputFileName) throws IOException
+    {
+        Workbook book = new XSSFWorkbook();     // объект работы с *.xlsx форматом
+        Sheet sheet = book.createSheet("Расписание");   // создаём лист
+        writePairsToFile(sheet, pairs, headerText, startCellIndex);     // выполняем запись
+        book.write(new FileOutputStream(outputFileName));  // сохраняем файл
     }
 }
