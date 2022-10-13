@@ -24,3 +24,6 @@ rasp_data
 
 #idea
 .idea
+*.idea
+.idea/
+.idea/runConfigurations.xml
